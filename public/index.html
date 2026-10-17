@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ElevenLabs AI Text-to-Speech Studio</title>
+  <meta name="description" content="Generate ultra-realistic AI voice and speech from any text using the ElevenLabs API and Node.js.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="glow-orb orb-1"></div>
+  <div class="glow-orb orb-2"></div>
+  <div class="glow-orb orb-3"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand-badge">
+        <span class="badge-dot"></span>
+        <span>ElevenLabs Neural TTS</span>
+      </div>
+      <h1 class="main-title">AI Text to Speech Studio</h1>
+      <p class="subtitle">Convert any custom text into natural, lifelike voice using ElevenLabs AI.</p>
+    </header>
+
+    <!-- Configuration Alert Banner (shown if API key is not configured) -->
+    <div id="apiKeyNotice" class="config-banner" style="display: none;">
+      <div class="config-banner-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="config-banner-text">
+        <strong>Setup Required:</strong> Add your <code>ELEVENLABS_API_KEY</code> to the <code>.env</code> file in your project root, then restart the server.
+      </div>
+      <button id="dismissNoticeBtn" class="banner-close" aria-label="Dismiss notice">&times;</button>
+    </div>
+
+    <!-- Main Workspace Card -->
+    <main class="converter-card">
+      <!-- Voice Selection Bar -->
+      <div class="control-row">
+        <div class="voice-picker-group">
+          <label for="voiceSelect" class="field-label">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
+            </svg>
+            Voice Model
+          </label>
+          <div class="select-wrapper">
+            <select id="voiceSelect" class="custom-select">
+              <option value="pNInz6obpgDQGcFmaJgB" selected>Adam — Deep & Expressive (Male)</option>
+              <option value="JBFqnCBsd6RMkjVDRZzb">George — Warm British Narration (Male)</option>
+              <option value="EXAVITQu4vr4xnSDxMaL">Sarah — Soft & Pleasant (Female)</option>
+              <option value="Xb7hH8MSUJpSbSDYk0k2">Alice — Clear & Confident (Female)</option>
+              <option value="cgSgspJ2msm6clMCkdW9">Jessica — Playful & Bright (Female)</option>
+              <option value="onwK4e9ZLuTAKqWW03F9">Daniel — Authoritative Broadcast (Male)</option>
+              <option value="21m00Tcm4TlvDq8ikWAM">Rachel — Calm & Natural (Requires Creator Plan)</option>
+            </select>
+            <div class="select-arrow">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Sample Text Pills -->
+        <div class="sample-pills-group">
+          <span class="sample-label">Quick samples:</span>
+          <div class="sample-chips">
+            <button type="button" class="sample-chip" data-sample="Welcome to our state-of-the-art text to speech studio. Feel free to type anything you wish, and hear it come alive!">Welcome</button>
+            <button type="button" class="sample-chip" data-sample="Deep in the quiet forest, the old cedar trees whispered secrets that had been kept for a thousand years.">Story</button>
+            <button type="button" class="sample-chip" data-sample="The only way to do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle.">Inspire</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Text Input Area -->
+      <div class="input-container">
+        <label for="textInput" class="field-label sr-only">Text to convert</label>
+        <textarea
+          id="textInput"
+          class="text-input"
+          placeholder="Enter ANY text you want to hear spoken here... Write a paragraph, a dialogue, a speech, or thoughts."
+          rows="7"
+          maxlength="2500"
+          spellcheck="true"
+        ></textarea>
+
+        <!-- Input Footer Metadata -->
+        <div class="input-meta">
+          <div class="text-stats">
+            <span id="charCount">0</span> / <span id="maxCharLimit">2,500</span> characters
+            <span class="meta-separator">•</span>
+            <span id="wordCount">0</span> words
+          </div>
+          <button type="button" id="clearTextBtn" class="action-link" title="Clear text">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Primary Action Button -->
+      <div class="action-wrapper">
+        <button id="generateBtn" class="generate-button" type="button">
+          <span class="btn-content">
+            <svg class="btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <span class="btn-label">Generate Voice</span>
+          </span>
+          <span class="btn-loader" style="display: none;">
+            <span class="spinner"></span>
+            <span>Synthesizing Voice...</span>
+          </span>
+        </button>
+      </div>
+
+      <!-- Live Notification / Error Container -->
+      <div id="statusMessage" class="status-box" style="display: none;"></div>
+
+      <!-- Audio Result Card (Revealed after generation) -->
+      <div id="audioResultCard" class="result-card" style="display: none;">
+        <div class="result-header">
+          <div class="result-title-group">
+            <div class="audio-badge">
+              <span class="audio-dot"></span>
+              Audio Ready
+            </div>
+            <span id="generationMeta" class="generation-meta">Generated with Rachel</span>
+          </div>
+
+          <!-- Soundwave Animation Visualizer -->
+          <div id="soundWave" class="sound-wave">
+            <span class="bar bar-1"></span>
+            <span class="bar bar-2"></span>
+            <span class="bar bar-3"></span>
+            <span class="bar bar-4"></span>
+            <span class="bar bar-5"></span>
+            <span class="bar bar-6"></span>
+            <span class="bar bar-7"></span>
+            <span class="bar bar-8"></span>
+          </div>
+        </div>
+
+        <!-- Audio Player -->
+        <div class="player-wrapper">
+          <audio id="audioPlayer" controls preload="auto"></audio>
+        </div>
+
+        <!-- Audio Action Controls -->
+        <div class="result-actions">
+          <a id="downloadAudioBtn" class="download-button" href="#" download="elevenlabs_speech.mp3" style="display: none;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download Audio
+          </a>
+          <button id="replayBtn" type="button" class="secondary-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Play Again
+          </button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Footer Information -->
+    <footer class="app-footer">
+      <p>Secure Node.js & Express Backend • API keys kept strictly private in <code>.env</code></p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
